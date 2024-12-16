@@ -1,0 +1,72 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "https://oss.sonatype.org/content/repositories/snapshots/" }
+        gradlePluginPortal()
+    }
+    dependencies {
+        classpath 'com.vanniktech:gradle-maven-publish-plugin:0.29.0'
+    }
+}
+
+apply plugin: 'java-library'
+apply plugin: 'com.vanniktech.maven.publish'
+
+def projectName = 'lwlp'
+
+group 'com.github.zeroeighteightzero'
+
+version "$VERSION_NAME"
+
+[compileJava, compileTestJava, javadoc]*.options*.encoding = 'UTF-8'
+
+if (JavaVersion.current().isJava8Compatible()) {
+    allprojects {
+        tasks.withType(Javadoc).tap {
+            configureEach {
+                options.addStringOption('Xdoclint:none,-missing', '-quiet')
+            }
+        }
+    }
+}
+
+compileJava {
+    sourceCompatibility = 8
+    targetCompatibility = 8
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release.set(8)
+    }
+}
+
+compileTestJava {
+    sourceCompatibility = 8
+    targetCompatibility = 8
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.release.set(8)
+    }
+}
+
+javadoc.destinationDir = file('docs/apidocs')
+
+jar {
+    archiveBaseName.set(projectName)
+    manifest {
+        attributes 'Implementation-Title': projectName, 'Implementation-Version': archiveVersion
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url 'https://s01.oss.sonatype.org' }
+    google()
+    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+    maven { url 'https://s01.oss.sonatype.org/content/repositories/snapshots/' }
+
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+}
