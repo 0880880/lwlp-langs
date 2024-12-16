@@ -1,6 +1,6 @@
-package com.github.zeroeighteightzero.lwlp;
+package com.github.zeroeighteightzero.lwlp.langs.css;
 
-import org.junit.jupiter.api.Test;
+import com.github.zeroeighteightzero.lwlp.*;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -9,9 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
-public class CSSTest {
+public class CSS {
 
     private static CaseMatch whitespaceCaseFLR(CaseMatch caseMatch) {
         return new ORMatch(
@@ -36,8 +34,8 @@ public class CSSTest {
         return whitespaceCaseFLR(new TokenMatch(name, type));
     }
 
-    public static String readResourceFile(String fileName) {
-        InputStream inputStream = CSSTest.class.getClassLoader().getResourceAsStream(fileName);
+    private static String readResourceFile(String fileName) {
+        InputStream inputStream = CSS.class.getClassLoader().getResourceAsStream(fileName);
         if (inputStream == null) throw new IllegalArgumentException("File not found: " + fileName);
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
             return reader.lines().collect(Collectors.joining("\n"));
@@ -46,8 +44,11 @@ public class CSSTest {
         }
     }
 
-    public static void test(String fileName) {
-        Lexer lexer = new Lexer(
+    Lexer lexer;
+    Parser parser;
+
+    public CSS() {
+        lexer = new Lexer(
                 new TokenPattern[]{
                         new TokenPattern("\\/\\*[\\s\\S]*?\\*\\/", "COMMENT").ignore(),
                         new TokenPattern("\\s+", "WHITESPACE"),
@@ -68,9 +69,7 @@ public class CSSTest {
                 }
         );
 
-        List<Token> tokens = lexer.lex(readResourceFile(fileName));
-
-        Parser parser = new Parser(
+        parser = new Parser(
                 new Definition("val",
                         new ORMatch(
                                 new TokenMatch("value_id", "IDENTIFIER"),
@@ -185,30 +184,11 @@ public class CSSTest {
                         true
                 )
         );
+    }
 
+    public void parse(String source) {
+        List<Token> tokens = lexer.lex(source);
         parser.parse(tokens);
-
-    }
-
-    @Test
-    public void cssTest0() {
-        assertDoesNotThrow(() -> {
-            test("css_test0.css");
-        });
-    }
-
-    @Test
-    public void cssTest1() {
-        assertDoesNotThrow(() -> {
-            test("css_test1.css");
-        });
-    }
-
-    @Test
-    public void cssTest2() {
-        assertDoesNotThrow(() -> {
-            test("css_test2.css");
-        });
     }
 
 }
