@@ -47,6 +47,10 @@ compileTestJava {
     }
 }
 
+test {
+    useJUnitPlatform()
+}
+
 javadoc.destinationDir = file('docs/apidocs')
 
 jar {
@@ -69,5 +73,8 @@ repositories {
 
 dependencies {
     implementation 'com.github.0880880:lwlp:v0.4.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.11.3'
+    implementation 'com.github.tommyettinger:colorful-pure:0.9.0'
+    implementation "com.github.tommyettinger:digital:0.5.4"
+    testImplementation "com.github.tommyettinger:colorful-pure:0.9.0"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
 }
