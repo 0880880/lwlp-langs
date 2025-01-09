@@ -10,6 +10,7 @@ public class CSSSelector {
     public static class SimpleSelector {
 
         public enum Type {
+            UNIVERSAL,
             TAG,
             HASH,
             CLASS,
