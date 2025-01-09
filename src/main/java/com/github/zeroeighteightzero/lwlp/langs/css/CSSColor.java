@@ -47,6 +47,29 @@ public class CSSColor {
         return fromLCH(l, c, h, 1);
     }
 
+    public CSSColor fromOKLAB(float l, float a, float b, float alpha) {
+        float encoded = com.github.tommyettinger.colorful.pure.oklab.ColorTools.oklab(l, a, b, alpha);
+        this.r = ColorTools.red(encoded);
+        this.g = ColorTools.green(encoded);
+        this.b = ColorTools.blue(encoded);
+        this.a = alpha;
+        return this;
+    }
+
+    public CSSColor fromOKLAB(float l, float a, float b) {
+        return fromOKLAB(l, a, b, 1);
+    }
+
+    public CSSColor fromOKLCH(float l, float c, float h, float alpha) {
+        float hRad = h * TrigTools.PI2;
+        fromOKLAB(l, c * TrigTools.cos(hRad), TrigTools.sin(hRad), alpha);
+        return this;
+    }
+
+    public CSSColor fromOKLCH(float l, float c, float h) {
+        return fromOKLCH(l, c, h, 1);
+    }
+
     public CSSColor fromHSV(float h, float s, float v, float alpha) {
         int i = (int) (h * 6);
         float f = h * 6 - i;
