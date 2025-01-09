@@ -1,6 +1,6 @@
 package com.github.zeroeighteightzero.lwlp.langs.css;
 
-import com.github.tommyettinger.colorful.pure.cielab.ColorTools;
+import com.github.tommyettinger.colorful.pure.oklab.ColorTools;
 import com.github.tommyettinger.digital.TrigTools;
 
 public class CSSColor {
@@ -25,10 +25,9 @@ public class CSSColor {
     }
 
     public CSSColor fromLAB(float l, float a, float b, float alpha) {
-        float encoded = ColorTools.cielab(l, a, b, alpha);
-        this.r = ColorTools.red(encoded);
-        this.g = ColorTools.green(encoded);
-        this.b = ColorTools.blue(encoded);
+        this.r = CIELAB.red(l, a, b, CIEIlluminant.D50);
+        this.g = CIELAB.green(l, a, b, CIEIlluminant.D50);
+        this.b = CIELAB.blue(l, a, b, CIEIlluminant.D50);
         this.a = alpha;
         return this;
     }
@@ -48,7 +47,7 @@ public class CSSColor {
     }
 
     public CSSColor fromOKLAB(float l, float a, float b, float alpha) {
-        float encoded = com.github.tommyettinger.colorful.pure.oklab.ColorTools.oklab(l, a, b, alpha);
+        float encoded = ColorTools.oklab(l, a, b, alpha);
         this.r = ColorTools.red(encoded);
         this.g = ColorTools.green(encoded);
         this.b = ColorTools.blue(encoded);
