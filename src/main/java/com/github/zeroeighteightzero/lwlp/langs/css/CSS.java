@@ -461,16 +461,16 @@ public class CSS {
                 CSSValue[] args = value.functionArguments;
                 value.type = CSSType.COLOR;
                 if (value.functionName.equals("rgb") && args.length == 3 && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
-                    value.color = new CSSColor(args[0].numberUnit.number / 255f, args[1].numberUnit.number / 255f, args[2].numberUnit.number / 255f, 1);
+                    value.color = new CSSColor(args[0].numberUnit.number / 255f, args[1].numberUnit.number / 255f, args[2].numberUnit.number / 255f);
                 } else if (value.functionName.equals("rgba") && args.length == 4 && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     value.color = new CSSColor(args[0].numberUnit.number / 255f, args[1].numberUnit.number / 255f, args[2].numberUnit.number / 255f, args[3].numberUnit.number);
                 } else if (value.functionName.equals("hsl") && args.length == 3 && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT) && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.NONE, CSSUnit.PERCENT, CSSUnit.PERCENT)) {
-                    value.color = new CSSColor().fromHSL(args[0].numberUnit.number / 360f, args[1].numberUnit.number / 100f, args[2].numberUnit.number / 100f, 1);
+                    value.color = new CSSColor().fromHSL(args[0].numberUnit.number / 360f, args[1].numberUnit.number / 100f, args[2].numberUnit.number / 100f);
                 } else if (value.functionName.equals("hsla") && args.length == 4 && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT) && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.NONE, CSSUnit.PERCENT, CSSUnit.PERCENT, CSSUnit.NONE)) {
                     value.color = new CSSColor().fromHSL(args[0].numberUnit.number / 360f, args[1].numberUnit.number / 100f, args[2].numberUnit.number / 100f, args[3].numberUnit.number);
                 } else if (value.functionName.equals("hwb") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.NONE, CSSUnit.PERCENT, CSSUnit.PERCENT)) {
-                        value.color = new CSSColor().fromHWB(args[0].numberUnit.number / 360f, args[1].numberUnit.number / 100f, args[2].numberUnit.number / 100f, 1);
+                        value.color = new CSSColor().fromHWB(args[0].numberUnit.number / 360f, args[1].numberUnit.number / 100f, args[2].numberUnit.number / 100f);
                     } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.NONE, CSSUnit.PERCENT, CSSUnit.PERCENT, CSSUnit.NONE)) {
                         value.color = new CSSColor().fromHWB(args[0].numberUnit.number / 360f, args[1].numberUnit.number / 100f, args[2].numberUnit.number / 100f, args[3].numberUnit.number);
                     } else {
@@ -478,7 +478,7 @@ public class CSS {
                     }
                 } else if (value.functionName.equals("lab") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
-                        value.color = new CSSColor().fromLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f, 1);
+                        value.color = new CSSColor().fromLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f);
                     } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
                         value.color = new CSSColor().fromLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f, args[3].numberUnit.number);
                     } else {
@@ -486,7 +486,7 @@ public class CSS {
                     }
                 } else if (value.functionName.equals("lch") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
-                        value.color = new CSSColor().fromLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, 1);
+                        value.color = new CSSColor().fromLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f);
                     } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
                         value.color = new CSSColor().fromLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, args[3].numberUnit.number);
                     } else {
@@ -494,7 +494,7 @@ public class CSS {
                     }
                 } else if (value.functionName.equals("oklab") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
-                        value.color = new CSSColor().fromOKLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f, 1);
+                        value.color = new CSSColor().fromOKLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f);
                     } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
                         value.color = new CSSColor().fromOKLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f, args[3].numberUnit.number);
                     } else {
@@ -502,7 +502,7 @@ public class CSS {
                     }
                 } else if (value.functionName.equals("oklch") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
-                        value.color = new CSSColor().fromOKLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, 1);
+                        value.color = new CSSColor().fromOKLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f);
                     } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
                         value.color = new CSSColor().fromOKLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, args[3].numberUnit.number);
                     } else {
