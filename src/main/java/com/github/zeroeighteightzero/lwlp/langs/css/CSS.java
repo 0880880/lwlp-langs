@@ -2,8 +2,12 @@ package com.github.zeroeighteightzero.lwlp.langs.css;
 
 import com.github.zeroeighteightzero.lwlp.*;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 public class CSS {
 
@@ -35,7 +39,7 @@ public class CSS {
                         new TokenPattern("\\)", "RPAREN"),
                         new TokenPattern("\\!important", "IMPORTANT"),
                         new TokenPattern("(?:\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)')", "STRING"),
-                        new TokenPattern("[^\\W\\d][\\w-]*", "IDENTIFIER"),
+                        new TokenPattern("([^\\W\\d][\\w-]*)|(\\#\\w+)", "IDENTIFIER"),
                         new TokenPattern("\\d+(\\.\\d+)?", "NUMBER"),
                         new TokenPattern("#[\\w-]+", "HASH"),
                         new TokenPattern("\\.[\\w-]+", "CLASS"),
@@ -85,6 +89,7 @@ public class CSS {
                 new Definition("simple_selector",
                         new ANDMatch("simple_selector",
                                 new ORMatch(
+                                        new TokenMatch("universal", "ASTERISK"),
                                         new TokenMatch("tag", "IDENTIFIER"),
                                         new TokenMatch("hash", "HASH"),
                                         new TokenMatch("class", "CLASS"),
@@ -481,9 +486,25 @@ public class CSS {
                     }
                 } else if (value.functionName.equals("lch") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
                     if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
-                        value.color = new CSSColor().fromLAB(args[0].numberUnit.number / 100f, args[1].numberUnit.number, args[2].numberUnit.number / 360f, 1);
+                        value.color = new CSSColor().fromLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, 1);
                     } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
-                        value.color = new CSSColor().fromLAB(args[0].numberUnit.number / 100f, args[1].numberUnit.number, args[2].numberUnit.number / 360f, args[3].numberUnit.number);
+                        value.color = new CSSColor().fromLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, args[3].numberUnit.number);
+                    } else {
+                        value.type = CSSType.FUNCTION;
+                    }
+                } else if (value.functionName.equals("oklab") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
+                    if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
+                        value.color = new CSSColor().fromOKLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f, 1);
+                    } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
+                        value.color = new CSSColor().fromOKLAB(args[0].numberUnit.number / 100f, (args[1].numberUnit.number + 128) / 255f, (args[2].numberUnit.number + 128) / 255f, args[3].numberUnit.number);
+                    } else {
+                        value.type = CSSType.FUNCTION;
+                    }
+                } else if (value.functionName.equals("oklch") && FunctionUtils.argumentsTypeCheck(args, CSSType.NUMBER_UNIT)) {
+                    if (args.length == 3 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE)) {
+                        value.color = new CSSColor().fromOKLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, 1);
+                    } else if (args.length == 4 && FunctionUtils.argumentsNumberUnitCheck(args, CSSUnit.PERCENT, CSSUnit.NONE, CSSUnit.NONE, CSSUnit.NONE)) {
+                        value.color = new CSSColor().fromOKLCH(args[0].numberUnit.number / 100f, args[1].numberUnit.number / 175f, args[2].numberUnit.number / 360f, args[3].numberUnit.number);
                     } else {
                         value.type = CSSType.FUNCTION;
                     }
@@ -528,7 +549,9 @@ public class CSS {
     private CSSSelector.SimpleSelector simpleSelector(Node n) {
         CSSSelector.SimpleSelector simpleSelector = new CSSSelector.SimpleSelector();
         Node node = ((ListNode) n).nodes[0];
-        if ("tag".equals(node.name)) {
+        if ("universal".equals(node.name)) {
+            simpleSelector.type = CSSSelector.SimpleSelector.Type.UNIVERSAL;
+        } else if ("tag".equals(node.name)) {
             simpleSelector.type = CSSSelector.SimpleSelector.Type.TAG;
             simpleSelector.tag = ((TokenNode) node).value;
         } else if ("hash".equals(node.name)) {
@@ -569,6 +592,8 @@ public class CSS {
                 ListNode additional = (ListNode) pseudoAdd.nodes[1];
                 for (Node sel : additional.nodes) {
                     simpleSelectors.add(simpleSelector(sel));
+                    if (simpleSelectors.get(simpleSelectors.size()-1).type == CSSSelector.SimpleSelector.Type.UNIVERSAL)
+                        errorHandler.error("Universal selector can't be here.", CSSErrorType.SYNTAX_ERROR);
                 }
             } else if ("add_pseudo".equals(o.name)) {
                 ListNode addPseudo = (ListNode) o;
@@ -576,11 +601,15 @@ public class CSS {
                 ListNode additional = (ListNode) addPseudo.nodes[0];
                 for (Node sel : additional.nodes) {
                     simpleSelectors.add(simpleSelector(sel));
+                    if (simpleSelectors.get(simpleSelectors.size()-1).type == CSSSelector.SimpleSelector.Type.UNIVERSAL)
+                        errorHandler.error("Universal selector can't be here.", CSSErrorType.SYNTAX_ERROR);
                 }
             } else if ("additional_selectors".equals(o.name)) {
                 ListNode additional = (ListNode) o;
                 for (Node sel : additional.nodes) {
                     simpleSelectors.add(simpleSelector(sel));
+                    if (simpleSelectors.get(simpleSelectors.size()-1).type == CSSSelector.SimpleSelector.Type.UNIVERSAL)
+                        errorHandler.error("Universal selector can't be here.", CSSErrorType.SYNTAX_ERROR);
                 }
             } else if ("pseudo_element".equals(o.name)) {
                 compoundSelector.pseudoElement = ((TokenNode) ((ListNode) o).nodes[2]).value;
@@ -656,6 +685,64 @@ public class CSS {
             stylesheet.rules[i] = rule;
         }
         return stylesheet;
+    }
+    
+    public static void printObject(Object obj, String indent) {
+        if (obj == null) {
+            System.out.println(indent + "null");
+            return;
+        }
+
+        Class<?> objClass = obj.getClass();
+        System.out.println(indent + "Object: " + objClass.getSimpleName());
+
+        if (objClass.isPrimitive() || obj instanceof String || obj instanceof Number || obj instanceof Boolean || obj instanceof Character || objClass.isEnum()) {
+            System.out.println(indent + "Value: " + obj);
+            return;
+        }
+
+        if (objClass.isArray()) {
+            int length = Array.getLength(obj);
+            for (int i = 0; i < length; i++) {
+                System.out.println(indent + "Array Element [" + i + "]:");
+                printObject(Array.get(obj, i), indent + "\t");
+            }
+            return;
+        }
+
+        if (obj instanceof Collection) {
+            Collection<?> collection = (Collection<?>) obj;
+            int index = 0;
+            for (Object element : collection) {
+                System.out.println(indent + "Collection Element [" + index + "]:");
+                printObject(element, indent + "\t");
+                index++;
+            }
+            return;
+        }
+
+        if (obj instanceof Map) {
+            Map<?, ?> map = (Map<?, ?>) obj;
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                System.out.println(indent + "Map Entry Key:");
+                printObject(entry.getKey(), indent + "    ");
+                System.out.println(indent + "Map Entry Value:");
+                printObject(entry.getValue(), indent + "    ");
+            }
+            return;
+        }
+
+        Field[] fields = objClass.getDeclaredFields();
+        for (Field field : fields) {
+            field.setAccessible(true);
+            try {
+                Object fieldValue = field.get(obj);
+                System.out.println(indent + "Field: " + field.getName());
+                printObject(fieldValue, indent + "    ");
+            } catch (IllegalAccessException e) {
+                System.out.println(indent + "Field: " + field.getName() + " (access denied)");
+            }
+        }
     }
 
 }
