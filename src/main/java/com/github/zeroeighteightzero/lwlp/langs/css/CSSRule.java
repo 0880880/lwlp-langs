@@ -2,7 +2,7 @@ package com.github.zeroeighteightzero.lwlp.langs.css;
 
 public class CSSRule {
 
-    public CSSSelector[] selectors;
+    public CSSSelector selector;
     public CSSDeclaration[] declarations;
 
     @Override
@@ -11,12 +11,7 @@ public class CSSRule {
     }
 
     private String selectorsToString(StringBuilder sb) {
-        if (selectors.length == 0) return "";
-        for (int i = 0; i < selectors.length; i++) {
-            if (i > 0)
-                sb.append(',');
-            sb.append(selectors[i]);
-        }
+        sb.append(selector);
         return sb.toString();
     }
 
@@ -37,8 +32,8 @@ public class CSSRule {
         return sb.toString();
     }
 
-    public CSSSelector[] getSelectors() {
-        return selectors;
+    public CSSSelector getSelector() {
+        return selector;
     }
 
     public CSSDeclaration[] getDeclarations() {

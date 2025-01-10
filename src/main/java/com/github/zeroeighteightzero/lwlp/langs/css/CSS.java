@@ -15,7 +15,7 @@ public class CSS {
     Parser parser;
     public final CSSOptions options = new CSSOptions();
 
-    private static boolean isHexadecimal(String str) {
+    static boolean isHexadecimal(String str) {
         if (str == null || str.isEmpty()) return false;
         int len = str.length();
         for (int i = 0; i < len; i++) {
@@ -39,7 +39,7 @@ public class CSS {
                         new TokenPattern("\\)", "RPAREN"),
                         new TokenPattern("\\!important", "IMPORTANT"),
                         new TokenPattern("(?:\"([^\"\\\\]*(\\\\.[^\"\\\\]*)*)\"|'([^'\\\\]*(\\\\.[^'\\\\]*)*)')", "STRING"),
-                        new TokenPattern("([^\\W\\d][\\w-]*)|(\\#\\w+)", "IDENTIFIER"),
+                        new TokenPattern("((\\-\\-)?[^\\W\\d][\\w-]*)|(\\#\\w+)", "IDENTIFIER"),
                         new TokenPattern("\\d+(\\.\\d+)?", "NUMBER"),
                         new TokenPattern("#[\\w-]+", "HASH"),
                         new TokenPattern("\\.[\\w-]+", "CLASS"),
@@ -225,11 +225,16 @@ public class CSS {
                                                 1)
                                 ),
                                 new TokenMatch("lbrace", "LBRACE"),
-                                MultiMatch.min("declarations",
-                                        new DefMatch("declaration", "declaration"),
-                                        0
-                                ),
-                                new TokenMatch("rbrace", "RBRACE")
+                                new ORMatch(
+                                        new ANDMatch("declarations",
+                                                MultiMatch.min("declarations",
+                                                        new DefMatch("declaration", "declaration"),
+                                                        0
+                                                ),
+                                                new TokenMatch("rbrace", "RBRACE")
+                                        ),
+                                        new TokenMatch("rbrace", "RBRACE")
+                                )
                         ),
                         true
                 ),
@@ -293,7 +298,7 @@ public class CSS {
         throw new RuntimeException(type.name() + " : " + message);
     };
 
-    private CSSMath factor(ListNode n) {
+    private static CSSMath factor(ListNode n, CSSErrorHandler errorHandler) {
         Node f = n.nodes[0];
         if ("operator".equals(f.name))
             f = n.nodes[1];
@@ -302,16 +307,16 @@ public class CSS {
             v = new CSSMath();
             v.values.put(CSSUnit.NONE, new CSSNumberUnit(Float.parseFloat((((TokenNode) f).value))));
         } else if ("parentheses_expression".equals(f.name)) {
-            v = expression((ListNode) ((ListNode) f).get("expression"));
+            v = expression((ListNode) ((ListNode) f).get("expression"), errorHandler);
         } else if ("number_unit".equals(f.name)) {
             ListNode list = (ListNode) f;
             v = new CSSMath();
             CSSUnit unit = CSSUnit.fromString(((TokenNode) list.get("unit")).value);
             v.values.put(unit, new CSSNumberUnit(Float.parseFloat((((TokenNode) list.get("value")).value)), unit));
         } else if ("unary_plus".equals(f.name)) {
-            v = factor((ListNode) ((ListNode) f).get("operand"));
+            v = factor((ListNode) ((ListNode) f).get("operand"), errorHandler);
         } else {
-            v = factor((ListNode) ((ListNode) ((ListNode) f).get("unary_minus")).get("operand"));
+            v = factor((ListNode) ((ListNode) ((ListNode) f).get("unary_minus")).get("operand"), errorHandler);
             for (CSSUnit unit : v.values.keySet()) {
                 v.values.replace(unit, new CSSNumberUnit(-v.values.get(unit).number, v.values.get(unit).unit));
             }
@@ -319,16 +324,16 @@ public class CSS {
         return v;
     }
 
-    private CSSMath term(ListNode t) {
-        CSSMath left = factor(t);
+    private static CSSMath term(ListNode t, CSSErrorHandler errorHandler) {
+        CSSMath left = factor(t, errorHandler);
         Node mdn = t.get("multiply_or_divide");
         if (mdn == null) return left;
         ListNode md = (ListNode) mdn;
         for (int i = 0; i < md.nodes.length; i++) {
             ListNode opf = (ListNode) md.nodes[i];
             String op = ((TokenNode) opf.get("operator")).value;
-            CSSMath right = factor(opf);
-            if (left.values.size() > 1 && right.values.size() > 1 || (!right.values.containsKey(CSSUnit.NONE) && !left.values.containsKey(CSSUnit.NONE)))
+            CSSMath right = factor(opf, errorHandler);
+            if (errorHandler != null && ((left.values.size() > 1 && right.values.size() > 1) || (!right.values.containsKey(CSSUnit.NONE) && !left.values.containsKey(CSSUnit.NONE))))
                 errorHandler.error("Invalid term.", CSSErrorType.INVALID_VALUE);
             CSSNumberUnit rightNum = right.values.get(CSSUnit.NONE);
             if (!right.values.containsKey(CSSUnit.NONE)) {
@@ -343,7 +348,7 @@ public class CSS {
                 }
             }
             if ("/".equals(op)) {
-                if (rightNum.number == 0)
+                if (errorHandler != null && rightNum.number == 0)
                     errorHandler.error("Division by zero.", CSSErrorType.DIVISION_BY_ZERO);
                 for (CSSUnit unit : left.values.keySet()) {
                     left.values.get(unit).number /= rightNum.number;
@@ -353,16 +358,16 @@ public class CSS {
         return left;
     }
 
-    private CSSMath expression(ListNode expr) {
+    static CSSMath expression(ListNode expr, CSSErrorHandler errorHandler) {
         Node t = expr.get("term_expression");
-        CSSMath left = term((ListNode) t);
+        CSSMath left = term((ListNode) t, errorHandler);
         Node asn = expr.get("add_or_subtract");
         if (asn == null) return left;
         ListNode as = (ListNode) asn;
         for (int i = 0; i < as.nodes.length; i++) {
             ListNode opt = (ListNode) as.nodes[i];
             String op = ((TokenNode) opt.get("operator")).value;
-            CSSMath right = term((ListNode) opt.get("term_expression"));
+            CSSMath right = term((ListNode) opt.get("term_expression"), errorHandler);
             if ("+".equals(op)) {
                 for (CSSUnit unit : left.values.keySet()) {
                     if (right.values.containsKey(unit)) {
@@ -436,8 +441,8 @@ public class CSS {
             value.string = ((TokenNode) node).value;
         } else if ("expression".equals(node.name)) {
             value.type = CSSType.MATH;
-            value.math = expression((ListNode) node);
-            if (value.math.values.size() == 1 && options.convertColorFunctions) {
+            value.math = expression((ListNode) node, errorHandler);
+            if (value.math.values.size() == 1 && options.convertSingleUnitMath) {
                 value.type = CSSType.NUMBER_UNIT;
                 value.numberUnit = value.math.values.values().toArray(new CSSNumberUnit[0])[0];
             }
@@ -658,12 +663,20 @@ public class CSS {
         return declaration;
     }
 
+    private static CSSDeclaration[] addAll(CSSDeclaration[] destination, CSSDeclaration[] source) {
+        CSSDeclaration[] res = new CSSDeclaration[destination.length + source.length];
+        System.arraycopy(destination, 0, res, 0, destination.length);
+        System.arraycopy(source, 0, res, destination.length, source.length);
+        return res;
+    }
+
     public CSSStylesheet process(String source) {
         ListNode program = parse(source);
         if (program == null)
             return null;
+        if (options.printAST)
+            printObject(program, "");
         CSSStylesheet stylesheet = new CSSStylesheet();
-        stylesheet.rules = new CSSRule[program.nodes.length];
         for (int i = 0; i < program.nodes.length; i++) {
             Node n = program.nodes[i];
             ListNode ruleNode = (ListNode) n;
@@ -676,13 +689,35 @@ public class CSS {
                     selectors.add(selector(((ListNode) sel).nodes[1]));
                 }
             }
-            rule.selectors = selectors.toArray(new CSSSelector[0]);
+            CSSSelector root = new CSSSelector();
+            root.selectors = new CSSSelector.CompoundSelector[1];
+            CSSSelector.SimpleSelector rootSimple = new CSSSelector.SimpleSelector();
+            rootSimple.type = CSSSelector.SimpleSelector.Type.PSEUDO_CLASS;
+            rootSimple.pseudoClassName = "root";
+            root.selectors[0].simpleSelectors = new CSSSelector.SimpleSelector[] {rootSimple};
+
             ArrayList<CSSDeclaration> declarations = new ArrayList<>();
-            for (Node declaration : ((ListNode) ruleNode.get("declarations")).nodes) {
-                declarations.add(createDeclaration(declaration));
+            if (ruleNode.get("declarations") != null) {
+                ListNode d = (ListNode) ruleNode.get("declarations");
+                for (Node declarationNode : ((ListNode) d.get("declarations")).nodes) {
+                    CSSDeclaration declaration = createDeclaration(declarationNode);
+                    declarations.add(declaration);
+
+                    if (options.createVariables && declaration.property.startsWith("--")) {
+                        for (CSSSelector selector : selectors) {
+                            stylesheet.getScope(selector).variables.put(declaration.property, declaration.values);
+                        }
+                    }
+                }
             }
             rule.declarations = declarations.toArray(new CSSDeclaration[0]);
-            stylesheet.rules[i] = rule;
+
+            for (CSSSelector selector : selectors) {
+                if (stylesheet.rules.containsKey(selector))
+                    stylesheet.rules.get(selector).declarations = addAll(stylesheet.rules.get(selector).declarations, rule.declarations);
+                else
+                    stylesheet.rules.put(selector, rule);
+            }
         }
         return stylesheet;
     }
