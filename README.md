@@ -1,12 +1,58 @@
 # Language Implementations with [LWLP](https://github.com/0880880/lwlp)
 
-This repository contains implementations of various languages using LWLP. Currently, only the CSS implementation is available.
+This repository contains implementations of various languages using LWLP. Currently, only the CSS implementation is
+available.
 
 - [CSS Implementation](#css)
 
 ## CSS
 
-The CSS implementation is available in the [CSS package](https://github.com/0880880/lwlp-langs/tree/core/src/main/java/com/github/zeroeighteightzero/lwlp/langs/css).
+The CSS implementation is available in
+the [CSS package](https://github.com/0880880/lwlp-langs/tree/core/src/main/java/com/github/zeroeighteightzero/lwlp/langs/css).
+
+
+<details>
+  <summary>CSS Features</summary>
+
+This CSS implementation supports comprehensive CSS parsing and manipulation, including:
+
+### Selectors and Rules
+
+- Full support for selectors like tag, class, ID, and universal
+- Compound selectors with combinators (>, ~)
+- Pseudo-classes and pseudo-elements
+- Attribute selectors
+- Rule declarations with property-value pairs
+
+### Color Support
+
+- RGB/RGBA and HSL/HSLA color values
+- HSV/HSVA color handling
+- Advanced color spaces:
+    - CIELAB with D50 illuminant
+    - LCH, OKLCH, and OKLAB
+- Named colors and hex values
+
+### Values and Units
+
+- Numbers with various units
+- Length units (px, em, rem, etc.)
+- Percentages and calculations
+- String values, identifiers, and functions
+
+### Additional Features
+
+- CSS comment parsing
+- `!important` declarations
+- Error handling and validation
+- Configurable parsing options
+- Math expression evaluation
+- Stylesheet editing features
+- Variables
+
+</details>
+
+<br>
 
 <details>
   <summary>CSS Code Example</summary>
